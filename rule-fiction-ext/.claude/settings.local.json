@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /b /ad \"c:\\\\Users\\\\Administrator\\\\Desktop\\\\没想好\")",
+      "Bash(dir /b \"c:\\\\Users\\\\Administrator\\\\Desktop\\\\没想好\\\\KPOP-PET-test-\")",
+      "Bash(dir /b \"c:\\\\Users\\\\Administrator\\\\Desktop\\\\没想好\\\\rule-fiction-ext\\\\nul\")",
+      "Bash(powershell -Command \"Remove-Item -LiteralPath ''c:\\\\Users\\\\Administrator\\\\Desktop\\\\没想好\\\\rule-fiction-ext\\\\nul'' -Force\")",
+      "Bash(powershell -Command \"Remove-Item -LiteralPath ''nul'' -Force\")",
+      "Bash(cmd /c \"dir /a\")",
+      "Bash(python -c \"import os; os.remove\\(''nul''\\); print\\(''deleted''\\)\")",
+      "Bash(cmd /c \"del /f nul\")",
+      "Bash(cmd /c \"dir /a nul\")"
+    ]
+  }
+}
