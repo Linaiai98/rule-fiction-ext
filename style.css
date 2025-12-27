@@ -1,6 +1,5 @@
-/* 规则怪谈系统样式 - 极简风格 */
+/* 规则怪谈系统样式 */
 
-/* --- 基础样式 --- */
 :root {
     --rf-bg-color: #ffffff;
     --rf-bg-secondary: #fafafa;
@@ -8,6 +7,9 @@
     --rf-text-muted: #666666;
     --rf-border-color: #e5e5e5;
     --rf-border-focus: #999999;
+
+    --rf-btn-bg: linear-gradient(145deg, #667eea, #764ba2);
+    --rf-btn-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 
     --rf-primary: #1a1a1a;
     --rf-primary-hover: #333333;
@@ -25,23 +27,22 @@
 }
 
 /* --- 悬浮按钮 --- */
-#rf-toggle-btn {
+#rf-float-btn {
     position: fixed !important;
     z-index: 10000 !important;
-    cursor: pointer !important;
-    width: 48px !important;
-    height: 48px !important;
-    background: var(--rf-primary) !important;
+    cursor: grab !important;
+    width: 52px !important;
+    height: 52px !important;
+    background: var(--rf-btn-bg) !important;
     color: white !important;
     border: none !important;
     border-radius: 50% !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 20px !important;
-    font-weight: bold !important;
-    box-shadow: var(--rf-shadow) !important;
-    transition: transform 0.2s ease, background 0.2s ease !important;
+    font-size: 24px !important;
+    box-shadow: var(--rf-btn-shadow), inset 0 2px 4px rgba(255,255,255,0.3) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
     user-select: none !important;
     opacity: 1 !important;
     visibility: visible !important;
@@ -50,69 +51,104 @@
     touch-action: manipulation;
 }
 
-#rf-toggle-btn:hover {
+#rf-float-btn:hover {
     transform: scale(1.1) !important;
-    background: var(--rf-primary-hover) !important;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5), inset 0 2px 4px rgba(255,255,255,0.3) !important;
 }
 
-/* --- 侧边栏容器 --- */
-#rf-sidebar {
+#rf-float-btn:active,
+#rf-float-btn.dragging {
+    cursor: grabbing !important;
+    transform: scale(1.05) !important;
+}
+
+/* --- 弹窗遮罩 --- */
+.rf-popup-overlay {
     position: fixed !important;
     top: 0 !important;
-    right: -400px !important;
-    width: 380px !important;
-    height: 100vh !important;
-    background: var(--rf-bg-color) !important;
-    box-shadow: var(--rf-shadow) !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.4) !important;
     z-index: 10001 !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.rf-popup-container {
+    position: relative !important;
+    width: 380px !important;
+    max-height: 500px !important;
+    background: var(--rf-bg-color) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--rf-shadow) !important;
     display: flex !important;
     flex-direction: column !important;
-    transition: right 0.3s ease !important;
+    overflow: hidden !important;
     font-family: var(--rf-font) !important;
-    font-size: 14px !important;
-    line-height: 1.6 !important;
-    color: var(--rf-text-color) !important;
 }
 
-#rf-sidebar.open {
-    right: 0 !important;
-}
-
-/* --- 侧边栏头部 --- */
-.rf-header {
+/* --- 弹窗头部 --- */
+.rf-popup-header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 20px !important;
-    border-bottom: 1px solid var(--rf-border-color) !important;
+    padding: 16px 20px !important;
+    background: linear-gradient(145deg, #667eea, #764ba2) !important;
+    color: white !important;
+    cursor: move !important;
+    user-select: none !important;
 }
 
-.rf-header h2 {
+.rf-popup-header:active {
+    cursor: grabbing !important;
+}
+
+.rf-popup-title {
     font-size: 16px !important;
     font-weight: 600 !important;
-    letter-spacing: 1px !important;
-    margin: 0 !important;
 }
 
-.rf-close-btn {
-    background: none !important;
+.rf-popup-close-btn {
+    background: transparent !important;
     border: none !important;
+    color: white !important;
     font-size: 24px !important;
     cursor: pointer !important;
-    color: var(--rf-text-muted) !important;
-    padding: 0 5px !important;
     line-height: 1 !important;
+    padding: 0 5px !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.2s !important;
 }
 
-.rf-close-btn:hover {
-    color: var(--rf-text-color) !important;
+.rf-popup-close-btn:hover {
+    opacity: 1 !important;
+}
+
+/* --- 弹窗主体 --- */
+.rf-popup-body {
+    flex: 1 !important;
+    padding: 16px !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.rf-popup-body::-webkit-scrollbar {
+    display: none;
+}
+
+.rf-popup-body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* --- 规则列表 --- */
 .rf-rule-list {
     flex: 1 !important;
     overflow-y: auto !important;
-    padding: 16px !important;
+    padding: 8px !important;
 }
 
 /* --- 规则卡片 --- */
@@ -120,8 +156,8 @@
     background: var(--rf-bg-secondary) !important;
     border: 1px solid var(--rf-border-color) !important;
     border-radius: var(--rf-radius) !important;
-    padding: 16px !important;
-    margin-bottom: 12px !important;
+    padding: 12px !important;
+    margin-bottom: 8px !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
 }
@@ -132,7 +168,7 @@
 }
 
 .rf-card.expanded {
-    border-color: #333 !important;
+    border-color: #667eea !important;
 }
 
 /* 颜色变体 */
@@ -359,19 +395,52 @@
     background: var(--rf-bg-color) !important;
     border: 1px solid var(--rf-border-color) !important;
     border-radius: var(--rf-radius) !important;
-    padding: 20px !important;
+    padding: 0 !important;
     margin: 10px !important;
     max-width: 500px !important;
     font-family: var(--rf-font) !important;
     color: var(--rf-text-color) !important;
 }
 
-.rf-settings-panel h3 {
+.rf-settings-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 16px 20px !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    border-radius: var(--rf-radius) !important;
+    transition: background 0.2s ease !important;
+}
+
+.rf-settings-header:hover {
+    background: var(--rf-bg-secondary) !important;
+}
+
+.rf-settings-header h3 {
     font-size: 16px !important;
     font-weight: 600 !important;
-    margin: 0 0 20px 0 !important;
-    padding-bottom: 12px !important;
-    border-bottom: 1px solid var(--rf-border-color) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.rf-settings-toggle {
+    font-size: 12px !important;
+    color: var(--rf-text-muted) !important;
+    transition: transform 0.2s ease !important;
+}
+
+.rf-settings-toggle.collapsed {
+    transform: rotate(-90deg) !important;
+}
+
+.rf-settings-content {
+    padding: 0 20px 20px 20px !important;
+}
+
+.rf-settings-content.collapsed {
+    display: none !important;
 }
 
 .rf-setting-item {
@@ -503,4 +572,71 @@
 .rf-btn-danger:hover {
     background: var(--rf-danger) !important;
     color: #fff !important;
+}
+
+/* --- 移动端适配 --- */
+@media (max-width: 767px) {
+    /* 悬浮按钮调整 */
+    #rf-float-btn {
+        width: 56px !important;
+        height: 56px !important;
+        font-size: 28px !important;
+    }
+
+    /* 弹窗调整 */
+    .rf-popup-container {
+        width: calc(100vw - 20px) !important;
+        max-height: calc(100vh - 100px) !important;
+        max-width: none !important;
+    }
+
+    .rf-popup-header {
+        padding: 14px 16px !important;
+    }
+
+    .rf-popup-title {
+        font-size: 15px !important;
+    }
+
+    .rf-popup-body {
+        padding: 12px !important;
+    }
+
+    /* 规则卡片调整 */
+    .rf-card {
+        padding: 10px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .rf-card-title {
+        font-size: 13px !important;
+    }
+
+    .rf-card-content {
+        font-size: 12px !important;
+    }
+
+    .rf-card-actions button {
+        padding: 6px 8px !important;
+        font-size: 11px !important;
+    }
+
+    /* 添加按钮 */
+    .rf-add-btn {
+        margin: 12px !important;
+        padding: 10px 16px !important;
+        font-size: 13px !important;
+    }
+
+    /* 弹窗模态框 */
+    .rf-modal-content {
+        width: 95% !important;
+        max-height: 85vh !important;
+    }
+
+    .rf-modal-header,
+    .rf-modal-body,
+    .rf-modal-footer {
+        padding: 16px !important;
+    }
 }

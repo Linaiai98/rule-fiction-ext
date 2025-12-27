@@ -20,9 +20,11 @@ jQuery(async () => {
     const STORAGE_KEY_SETTINGS = "rule-fiction-settings";
 
     // DOM IDs
-    const SIDEBAR_ID = "rf-sidebar";
-    const TOGGLE_BTN_ID = "rf-toggle-btn";
-    const CLOSE_BTN_ID = "rf-sidebar-close";
+    const TOGGLE_BTN_ID = "rf-float-btn";
+    const POPUP_OVERLAY_ID = "rf-popup-overlay";
+    const POPUP_ID = "rf-popup";
+    const POPUP_HEADER_ID = "rf-popup-header";
+    const POPUP_CLOSE_ID = "rf-popup-close";
     const RULE_LIST_ID = "rf-rule-list";
     const ADD_BTN_ID = "rf-add-btn";
     const MODAL_ID = "rf-modal";
@@ -37,7 +39,10 @@ jQuery(async () => {
     // 状态
     let rules = [];
     let editingRuleId = null;
-    let isSidebarOpen = false;
+    let isPopupOpen = false;
+    let isDragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
 
     // 安全的 z-index 值
     const SAFE_Z_INDEX = {
@@ -133,117 +138,235 @@ jQuery(async () => {
 
         const $btn = $('<button>')
             .attr('id', TOGGLE_BTN_ID)
-            .text('R')
-            .attr('title', '规则怪谈 - 点击展开/收起');
+            .attr('title', '规则怪谈')
+            .html('📜');
+
+        // 按钮位置
+        $btn.css({
+            position: 'fixed !important',
+            zIndex: `${SAFE_Z_INDEX.button} !important`,
+            cursor: 'grab !important',
+            width: '52px !important',
+            height: '52px !important',
+            background: 'linear-gradient(145deg, #667eea, #764ba2) !important',
+            color: 'white !important',
+            border: 'none !important',
+            borderRadius: '50% !important',
+            display: 'flex !important',
+            alignItems: 'center !important',
+            justifyContent: 'center !important',
+            fontSize: '24px !important',
+            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4), inset 0 2px 4px rgba(255,255,255,0.3) !important',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease !important',
+            userSelect: 'none !important',
+            opacity: '1 !important',
+            visibility: 'visible !important',
+            pointerEvents: 'auto !important',
+            top: '200px !important',
+            left: '20px !important',
+            bottom: 'auto !important',
+            right: 'auto !important'
+        });
 
         $('body').append($btn);
 
-        $btn.on('click', function(e) {
+        // 拖拽功能
+        $btn.on('mousedown touchstart', function(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = $(this)[0].getBoundingClientRect();
+                dragOffsetX = touch.clientX - rect.left;
+                dragOffsetY = touch.clientY - rect.top;
+            } else {
+                dragOffsetX = e.offsetX;
+                dragOffsetY = e.offsetY;
+            }
+            isDragging = true;
+            $(this).css('cursor', 'grabbing !important');
+        });
+
+        $(document).on('mousemove touchmove', function(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            let clientX, clientY;
+            if (e.type === 'touchmove') {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const $btn = $(`#${TOGGLE_BTN_ID}`);
+            $btn.css({
+                left: (clientX - 26) + 'px',
+                top: (clientY - 26) + 'px'
+            });
+        });
+
+        $(document).on('mouseup touchend', function() {
+            if (isDragging) {
+                isDragging = false;
+                $(`#${TOGGLE_BTN_ID}`).css('cursor', 'grab !important');
+            }
+        });
+
+        // 点击打开弹窗
+        $btn.on('click touchend', function(e) {
+            if (isDragging) return;
             e.preventDefault();
             e.stopPropagation();
-            toggleSidebar();
+            togglePopup();
         });
     }
 
-    // 创建侧边栏
-    function createSidebar() {
-        if ($(`#${SIDEBAR_ID}`).length) return;
+    // 创建弹窗
+    function createPopup() {
+        if ($(`#${POPUP_OVERLAY_ID}`).length) return;
 
-        const $sidebar = $('<div>')
-            .attr('id', SIDEBAR_ID)
-            .addClass('rf-sidebar');
+        const $overlay = $('<div>')
+            .attr('id', POPUP_OVERLAY_ID)
+            .addClass('rf-popup-overlay');
 
-        // 头部
-        const $header = $('<div>').addClass('rf-header');
-        $header.append($('<h2>').text('规则怪谈'));
-        $header.append(
-            $('<button>')
-                .addClass('rf-close-btn')
-                .attr('id', CLOSE_BTN_ID)
-                .html('&times;')
-        );
+        const $popup = $('<div>')
+            .attr('id', POPUP_ID)
+            .addClass('rf-popup-container');
 
-        // 规则列表
-        const $ruleList = $('<div>').attr('id', RULE_LIST_ID).addClass('rf-rule-list');
-
-        // 添加按钮
-        const $addBtn = $('<button>')
-            .addClass('rf-add-btn')
-            .attr('id', ADD_BTN_ID)
-            .text('+ 添加规则');
-
-        // 弹窗
-        const $modal = $('<div>').attr('id', MODAL_ID).addClass('rf-modal rf-hidden');
-        $modal.append(
-            $('<div>').addClass('rf-modal-content').append(
-                $('<div>').addClass('rf-modal-header').append(
-                    $('<h3>').attr('id', MODAL_TITLE_ID).text('添加规则')
-                ).append(
-                    $('<button>')
-                        .addClass('rf-close-btn')
-                        .attr('id', MODAL_CLOSE_ID)
-                        .html('&times;')
-                )
-            ).append(
-                $('<div>').addClass('rf-modal-body').append(
-                    $('<div>').addClass('rf-form-group').append(
-                        $('<label>').text('规则标题')
-                    ).append(
-                        $('<input>')
-                            .attr('type', 'text')
-                            .attr('id', TITLE_INPUT_ID)
-                            .attr('placeholder', '输入规则标题...')
-                    )
-                ).append(
-                    $('<div>').addClass('rf-form-group').append(
-                        $('<label>').text('规则内容')
-                    ).append(
-                        $('<textarea>')
-                            .attr('id', CONTENT_INPUT_ID)
-                            .attr('rows', '8')
-                            .attr('placeholder', '输入规则内容...\n\n支持多行文本')
-                    )
-                ).append(
-                    $('<div>').addClass('rf-form-group').append(
-                        $('<label>').text('卡片颜色')
-                    ).append(
-                        $('<select>').attr('id', COLOR_SELECT_ID).append(
-                            $('<option>').val('default').text('默认 (黑白)')
-                        ).append(
-                            $('<option>').val('red').text('警告 (红色)')
-                        ).append(
-                            $('<option>').val('blue').text('信息 (蓝色)')
-                        ).append(
-                            $('<option>').val('yellow').text('注意 (黄色)')
-                        ).append(
-                            $('<option>').val('green').text('安全 (绿色)')
-                        )
-                    )
-                )
-            ).append(
-                $('<div>').addClass('rf-modal-footer').append(
-                    $('<button>')
-                        .addClass('rf-btn-secondary')
-                        .attr('id', CANCEL_BTN_ID)
-                        .text('取消')
-                ).append(
-                    $('<button>')
-                        .addClass('rf-btn-primary')
-                        .attr('id', SAVE_BTN_ID)
-                        .text('保存')
-                )
+        // 头部（可拖拽）
+        const $header = $('<div>')
+            .attr('id', POPUP_HEADER_ID)
+            .addClass('rf-popup-header')
+            .append(
+                $('<div>').addClass('rf-popup-title').text('📜 规则怪谈')
             )
-        );
+            .append(
+                $('<button>')
+                    .attr('id', POPUP_CLOSE_ID)
+                    .addClass('rf-popup-close-btn')
+                    .html('&times;')
+            );
 
-        $sidebar.append($header);
-        $sidebar.append($ruleList);
-        $sidebar.append($addBtn);
-        $sidebar.append($modal);
+        // 主体
+        const $body = $('<div>')
+            .addClass('rf-popup-body')
+            .append(
+                $('<div>').attr('id', RULE_LIST_ID).addClass('rf-rule-list')
+            )
+            .append(
+                $('<button>')
+                    .addClass('rf-add-btn')
+                    .attr('id', ADD_BTN_ID)
+                    .text('+ 添加规则')
+            );
 
-        $('body').append($sidebar);
+        $popup.append($header);
+        $popup.append($body);
+        $overlay.append($popup);
+        $('body').append($overlay);
 
-        // 绑定事件
-        bindSidebarEvents();
+        // 绑定弹窗事件
+        bindPopupEvents();
+
+        // 弹窗拖拽
+        makeDraggable($popup, $header);
+    }
+
+    // 使元素可拖拽
+    function makeDraggable($element, $handle) {
+        let isDraggingPopup = false;
+        let popupOffsetX = 0;
+        let popupOffsetY = 0;
+
+        $handle.on('mousedown touchstart', function(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = $element[0].getBoundingClientRect();
+                popupOffsetX = touch.clientX - rect.left;
+                popupOffsetY = touch.clientY - rect.top;
+            } else {
+                popupOffsetX = e.offsetX;
+                popupOffsetY = e.offsetY;
+            }
+            isDraggingPopup = true;
+            $element.css('transition', 'none');
+        });
+
+        $(document).on('mousemove touchmove', function(e) {
+            if (!isDraggingPopup) return;
+            e.preventDefault();
+
+            let clientX, clientY;
+            if (e.type === 'touchmove') {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            $element.css({
+                left: (clientX - popupOffsetX) + 'px',
+                top: (clientY - popupOffsetY) + 'px'
+            });
+        });
+
+        $(document).on('mouseup touchend', function() {
+            if (isDraggingPopup) {
+                isDraggingPopup = false;
+                $element.css('transition', '');
+            }
+        });
+    }
+
+    // 绑定弹窗事件
+    function bindPopupEvents() {
+        // 关闭按钮
+        $(`#${POPUP_CLOSE_ID}`).on('click', function(e) {
+            e.preventDefault();
+            closePopup();
+        });
+
+        // 点击遮罩关闭
+        $(`#${POPUP_OVERLAY_ID}`).on('click', function(e) {
+            if ($(e.target).is(this)) {
+                closePopup();
+            }
+        });
+
+        // 添加规则按钮
+        $(`#${ADD_BTN_ID}`).on('click', function(e) {
+            e.preventDefault();
+            openModal();
+        });
+
+        // ESC 关闭弹窗
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && isPopupOpen) {
+                closePopup();
+            }
+        });
+    }
+
+    // 切换弹窗显示
+    function togglePopup() {
+        isPopupOpen = !isPopupOpen;
+        const $overlay = $(`#${POPUP_OVERLAY_ID}`);
+
+        if (isPopupOpen) {
+            $overlay.fadeIn(200);
+            $(`#${POPUP_ID}`).css('display', 'flex');
+        } else {
+            $overlay.fadeOut(200);
+        }
+    }
+
+    // 关闭弹窗
+    function closePopup() {
+        isPopupOpen = false;
+        $(`#${POPUP_OVERLAY_ID}`).fadeOut(200);
     }
 
     // -----------------------------------------------------------------
@@ -258,54 +381,58 @@ jQuery(async () => {
 
         const settingsHtml = `
             <div id="${SETTINGS_ID}" class="rf-settings-panel">
-                <h3>⚙️ 规则怪谈设置</h3>
-
-                <div class="rf-setting-item">
-                    <label class="rf-toggle-label">
-                        <input type="checkbox" id="rf-enabled-toggle" ${settings.enabled ? 'checked' : ''}>
-                        <span>启用扩展</span>
-                    </label>
-                    <p class="rf-setting-desc">关闭后侧边栏按钮将隐藏</p>
+                <div class="rf-settings-header" id="rf-settings-header">
+                    <h3>⚙️ 规则怪谈设置</h3>
+                    <span class="rf-settings-toggle">▼</span>
                 </div>
-
-                <div class="rf-setting-item">
-                    <label>默认卡片颜色</label>
-                    <select id="rf-default-color">
-                        <option value="default" ${settings.defaultColor === 'default' ? 'selected' : ''}>默认 (黑白)</option>
-                        <option value="red" ${settings.defaultColor === 'red' ? 'selected' : ''}>警告 (红色)</option>
-                        <option value="blue" ${settings.defaultColor === 'blue' ? 'selected' : ''}>信息 (蓝色)</option>
-                        <option value="yellow" ${settings.defaultColor === 'yellow' ? 'selected' : ''}>注意 (黄色)</option>
-                        <option value="green" ${settings.defaultColor === 'green' ? 'selected' : ''}>安全 (绿色)</option>
-                    </select>
-                </div>
-
-                <div class="rf-setting-item">
-                    <label>关闭侧边栏快捷键</label>
-                    <select id="rf-shortcut-key">
-                        <option value="Escape" ${settings.shortcutKey === 'Escape' ? 'selected' : ''}>Escape (ESC)</option>
-                        <option value="KeyQ" ${settings.shortcutKey === 'KeyQ' ? 'selected' : ''}>Q</option>
-                        <option value="KeyW" ${settings.shortcutKey === 'KeyW' ? 'selected' : ''}>W</option>
-                        <option value="KeyX" ${settings.shortcutKey === 'KeyX' ? 'selected' : ''}>X</option>
-                    </select>
-                </div>
-
-                <div class="rf-setting-item">
-                    <label>规则管理</label>
-                    <div class="rf-setting-actions">
-                        <button id="rf-export-btn" class="rf-btn-secondary">📤 导出规则</button>
-                        <button id="rf-import-btn" class="rf-btn-secondary">📥 导入规则</button>
+                <div class="rf-settings-content" id="rf-settings-content">
+                    <div class="rf-setting-item">
+                        <label class="rf-toggle-label">
+                            <input type="checkbox" id="rf-enabled-toggle" ${settings.enabled ? 'checked' : ''}>
+                            <span>启用扩展</span>
+                        </label>
+                        <p class="rf-setting-desc">关闭后侧边栏按钮将隐藏</p>
                     </div>
-                    <input type="file" id="rf-import-file" accept=".json" style="display: none;">
-                </div>
 
-                <div class="rf-setting-item rf-danger-zone">
-                    <label>危险操作</label>
-                    <p class="rf-setting-desc">此操作无法撤销</p>
-                    <button id="rf-clear-all-btn" class="rf-btn-danger">🗑️ 清除所有规则</button>
-                </div>
+                    <div class="rf-setting-item">
+                        <label>默认卡片颜色</label>
+                        <select id="rf-default-color">
+                            <option value="default" ${settings.defaultColor === 'default' ? 'selected' : ''}>默认 (黑白)</option>
+                            <option value="red" ${settings.defaultColor === 'red' ? 'selected' : ''}>警告 (红色)</option>
+                            <option value="blue" ${settings.defaultColor === 'blue' ? 'selected' : ''}>信息 (蓝色)</option>
+                            <option value="yellow" ${settings.defaultColor === 'yellow' ? 'selected' : ''}>注意 (黄色)</option>
+                            <option value="green" ${settings.defaultColor === 'green' ? 'selected' : ''}>安全 (绿色)</option>
+                        </select>
+                    </div>
 
-                <div class="rf-setting-item">
-                    <p class="rf-setting-info">规则数量: <span id="rf-rule-count">${rules.length}</span></p>
+                    <div class="rf-setting-item">
+                        <label>关闭侧边栏快捷键</label>
+                        <select id="rf-shortcut-key">
+                            <option value="Escape" ${settings.shortcutKey === 'Escape' ? 'selected' : ''}>Escape (ESC)</option>
+                            <option value="KeyQ" ${settings.shortcutKey === 'KeyQ' ? 'selected' : ''}>Q</option>
+                            <option value="KeyW" ${settings.shortcutKey === 'KeyW' ? 'selected' : ''}>W</option>
+                            <option value="KeyX" ${settings.shortcutKey === 'KeyX' ? 'selected' : ''}>X</option>
+                        </select>
+                    </div>
+
+                    <div class="rf-setting-item">
+                        <label>规则管理</label>
+                        <div class="rf-setting-actions">
+                            <button id="rf-export-btn" class="rf-btn-secondary">📤 导出规则</button>
+                            <button id="rf-import-btn" class="rf-btn-secondary">📥 导入规则</button>
+                        </div>
+                        <input type="file" id="rf-import-file" accept=".json" style="display: none;">
+                    </div>
+
+                    <div class="rf-setting-item rf-danger-zone">
+                        <label>危险操作</label>
+                        <p class="rf-setting-desc">此操作无法撤销</p>
+                        <button id="rf-clear-all-btn" class="rf-btn-danger">🗑️ 清除所有规则</button>
+                    </div>
+
+                    <div class="rf-setting-item">
+                        <p class="rf-setting-info">规则数量: <span id="rf-rule-count">${rules.length}</span></p>
+                    </div>
                 </div>
             </div>
         `;
@@ -338,6 +465,14 @@ jQuery(async () => {
 
     // 绑定设置面板事件
     function bindSettingsPanelEvents() {
+        // 折叠/展开设置面板
+        $("#rf-settings-header").on('click', function() {
+            const $content = $("#rf-settings-content");
+            const $toggle = $(".rf-settings-toggle");
+            $content.slideToggle(200);
+            $toggle.toggleClass('collapsed');
+        });
+
         // 启用/禁用开关
         $("#rf-enabled-toggle").on('change', function() {
             settings.enabled = $(this).is(':checked');
@@ -394,12 +529,9 @@ jQuery(async () => {
     function toggleExtensionUI(enabled) {
         if (enabled) {
             $(`#${TOGGLE_BTN_ID}`).show();
-            if (isSidebarOpen) {
-                $(`#${SIDEBAR_ID}`).addClass('open');
-            }
         } else {
             $(`#${TOGGLE_BTN_ID}`).hide();
-            $(`#${SIDEBAR_ID}`).removeClass('open');
+            closePopup();
         }
     }
 
@@ -408,10 +540,10 @@ jQuery(async () => {
         $(document).off('keydown', null, null, 'keydown');
 
         $(document).on('keydown', function(e) {
-            // ESC 关闭侧边栏（可选）
+            // ESC 关闭弹窗（可选）
             if (e.code === settings.shortcutKey) {
-                if (isSidebarOpen) {
-                    closeSidebar();
+                if (isPopupOpen) {
+                    closePopup();
                 }
             }
         });
@@ -491,19 +623,7 @@ jQuery(async () => {
     // 4. 事件绑定
     // -----------------------------------------------------------------
 
-    function bindSidebarEvents() {
-        // 关闭按钮
-        $(`#${CLOSE_BTN_ID}`).on('click', function(e) {
-            e.preventDefault();
-            closeSidebar();
-        });
-
-        // 添加规则按钮
-        $(`#${ADD_BTN_ID}`).on('click', function(e) {
-            e.preventDefault();
-            openModal();
-        });
-
+    function bindRuleCardEvents() {
         // 弹窗关闭按钮
         $(`#${MODAL_CLOSE_ID}`).on('click', function(e) {
             e.preventDefault();
@@ -541,8 +661,6 @@ jQuery(async () => {
             const $card = $(e.target).closest('.rf-card');
             if (!$card.length) return;
 
-            const ruleId = $card.data('id');
-
             // 展开/收起
             $card.toggleClass('expanded');
 
@@ -562,34 +680,7 @@ jQuery(async () => {
     }
 
     // -----------------------------------------------------------------
-    // 5. 侧边栏控制
-    // -----------------------------------------------------------------
-
-    function toggleSidebar() {
-        isSidebarOpen = !isSidebarOpen;
-        $(`#${SIDEBAR_ID}`).toggleClass('open', isSidebarOpen);
-
-        // 保存状态
-        try {
-            localStorage.setItem(STORAGE_KEY_SIDEBAR_STATE, isSidebarOpen);
-        } catch (e) {
-            console.warn(`[${extensionName}] 保存状态失败:`, e);
-        }
-    }
-
-    function closeSidebar() {
-        isSidebarOpen = false;
-        $(`#${SIDEBAR_ID}`).removeClass('open');
-
-        try {
-            localStorage.setItem(STORAGE_KEY_SIDEBAR_STATE, 'false');
-        } catch (e) {
-            console.warn(`[${extensionName}] 保存状态失败:`, e);
-        }
-    }
-
-    // -----------------------------------------------------------------
-    // 6. 弹窗控制
+    // 5. 弹窗控制
     // -----------------------------------------------------------------
 
     function openModal(rule = null) {
@@ -704,7 +795,7 @@ jQuery(async () => {
     function cleanup() {
         console.log(`[${extensionName}] 清理中...`);
         $(`#${TOGGLE_BTN_ID}`).remove();
-        $(`#${SIDEBAR_ID}`).remove();
+        $(`#${POPUP_OVERLAY_ID}`).remove();
         $(`#rf-settings-panel`).remove();
         $(document).off('keydown', null, null, 'keydown');
     }
@@ -722,25 +813,17 @@ jQuery(async () => {
 
         // 创建 UI
         createToggleButton();
-        createSidebar();
+        createPopup();
         renderRules();
+
+        // 绑定规则卡片事件
+        bindRuleCardEvents();
 
         // 创建设置面板
         createSettingsPanel();
 
         // 应用设置 - 控制 UI 显示
         toggleExtensionUI(settings.enabled);
-
-        // 恢复侧边栏状态
-        try {
-            const savedState = localStorage.getItem(STORAGE_KEY_SIDEBAR_STATE);
-            if (savedState === 'true' && settings.enabled) {
-                isSidebarOpen = true;
-                $(`#${SIDEBAR_ID}`).addClass('open');
-            }
-        } catch (e) {
-            console.warn(`[${extensionName}] 恢复状态失败:`, e);
-        }
 
         // 设置全局快捷键
         updateGlobalShortcuts();
