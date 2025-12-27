@@ -1,44 +1,14 @@
 {
-  "manifest_version": 3,
-  "name": "规则怪谈 - Rule Fiction",
+  "name": "规则怪谈系统",
+  "display_name": "规则怪谈系统 (Rule Fiction System)",
+  "loading_order": 1001,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "匿名",
   "version": "1.0.0",
-  "description": "在 SillyTavern 中玩规则怪谈游戏的侧边栏插件",
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icons/icon.svg",
-      "48": "icons/icon.svg",
-      "128": "icons/icon.svg"
-    }
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["sidebar.css"],
-      "run_at": "document_end"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["sidebar.html", "sidebar.js"],
-      "matches": ["<all_urls>"]
-    }
-  ],
-  "icons": {
-    "16": "icons/icon.svg",
-    "48": "icons/icon.svg",
-    "128": "icons/icon.svg"
-  }
+  "homePage": "",
+  "auto_update": false,
+  "description": "在SillyTavern中玩规则怪谈游戏的侧边栏插件，支持规则卡片管理"
 }
