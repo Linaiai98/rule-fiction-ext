@@ -1,0 +1,506 @@
+/* 规则怪谈系统样式 - 极简风格 */
+
+/* --- 基础样式 --- */
+:root {
+    --rf-bg-color: #ffffff;
+    --rf-bg-secondary: #fafafa;
+    --rf-text-color: #1a1a1a;
+    --rf-text-muted: #666666;
+    --rf-border-color: #e5e5e5;
+    --rf-border-focus: #999999;
+
+    --rf-primary: #1a1a1a;
+    --rf-primary-hover: #333333;
+
+    --rf-success: #009933;
+    --rf-warning: #cc9900;
+    --rf-danger: #cc0000;
+    --rf-info: #0066cc;
+
+    --rf-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    --rf-radius: 8px;
+    --rf-radius-small: 6px;
+
+    --rf-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* --- 悬浮按钮 --- */
+#rf-toggle-btn {
+    position: fixed !important;
+    z-index: 10000 !important;
+    cursor: pointer !important;
+    width: 48px !important;
+    height: 48px !important;
+    background: var(--rf-primary) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+    font-weight: bold !important;
+    box-shadow: var(--rf-shadow) !important;
+    transition: transform 0.2s ease, background 0.2s ease !important;
+    user-select: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+#rf-toggle-btn:hover {
+    transform: scale(1.1) !important;
+    background: var(--rf-primary-hover) !important;
+}
+
+/* --- 侧边栏容器 --- */
+#rf-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    right: -400px !important;
+    width: 380px !important;
+    height: 100vh !important;
+    background: var(--rf-bg-color) !important;
+    box-shadow: var(--rf-shadow) !important;
+    z-index: 10001 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transition: right 0.3s ease !important;
+    font-family: var(--rf-font) !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    color: var(--rf-text-color) !important;
+}
+
+#rf-sidebar.open {
+    right: 0 !important;
+}
+
+/* --- 侧边栏头部 --- */
+.rf-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 20px !important;
+    border-bottom: 1px solid var(--rf-border-color) !important;
+}
+
+.rf-header h2 {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px !important;
+    margin: 0 !important;
+}
+
+.rf-close-btn {
+    background: none !important;
+    border: none !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    color: var(--rf-text-muted) !important;
+    padding: 0 5px !important;
+    line-height: 1 !important;
+}
+
+.rf-close-btn:hover {
+    color: var(--rf-text-color) !important;
+}
+
+/* --- 规则列表 --- */
+.rf-rule-list {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+}
+
+/* --- 规则卡片 --- */
+.rf-card {
+    background: var(--rf-bg-secondary) !important;
+    border: 1px solid var(--rf-border-color) !important;
+    border-radius: var(--rf-radius) !important;
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.rf-card:hover {
+    border-color: var(--rf-border-focus) !important;
+    background: #f5f5f5 !important;
+}
+
+.rf-card.expanded {
+    border-color: #333 !important;
+}
+
+/* 颜色变体 */
+.rf-card.rf-red {
+    border-left: 3px solid var(--rf-danger) !important;
+}
+
+.rf-card.rf-blue {
+    border-left: 3px solid var(--rf-info) !important;
+}
+
+.rf-card.rf-yellow {
+    border-left: 3px solid var(--rf-warning) !important;
+}
+
+.rf-card.rf-green {
+    border-left: 3px solid var(--rf-success) !important;
+}
+
+/* 卡片头部 */
+.rf-card-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+}
+
+.rf-card-title {
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    word-break: break-word !important;
+}
+
+/* 卡片内容 */
+.rf-card-content {
+    margin-top: 12px !important;
+    padding-top: 12px !important;
+    border-top: 1px dashed var(--rf-border-color) !important;
+    font-size: 13px !important;
+    white-space: pre-wrap !important;
+    display: none !important;
+}
+
+.rf-card.expanded .rf-card-content {
+    display: block !important;
+}
+
+/* 卡片操作按钮 */
+.rf-card-actions {
+    display: flex !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+    padding-top: 12px !important;
+    border-top: 1px dashed var(--rf-border-color) !important;
+}
+
+.rf-card-actions button {
+    flex: 1 !important;
+    padding: 8px 12px !important;
+    border: 1px solid var(--rf-border-color) !important;
+    background: #fff !important;
+    border-radius: var(--rf-radius-small) !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    transition: all 0.2s ease !important;
+}
+
+.rf-card-actions button:hover {
+    background: #f0f0f0 !important;
+    border-color: var(--rf-border-focus) !important;
+}
+
+.rf-card-actions button.rf-delete:hover {
+    background: #fee !important;
+    border-color: var(--rf-danger) !important;
+    color: var(--rf-danger) !important;
+}
+
+/* --- 添加按钮 --- */
+.rf-add-btn {
+    margin: 16px !important;
+    padding: 12px 20px !important;
+    background: var(--rf-primary) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: var(--rf-radius-small) !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    transition: background 0.2s ease !important;
+}
+
+.rf-add-btn:hover {
+    background: var(--rf-primary-hover) !important;
+}
+
+/* --- 弹窗 --- */
+.rf-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 10010 !important;
+}
+
+.rf-modal.rf-hidden {
+    display: none !important;
+}
+
+.rf-modal-content {
+    background: var(--rf-bg-color) !important;
+    border-radius: 12px !important;
+    width: 90% !important;
+    max-width: 400px !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+}
+
+.rf-modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 20px !important;
+    border-bottom: 1px solid var(--rf-border-color) !important;
+}
+
+.rf-modal-header h3 {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+}
+
+.rf-modal-body {
+    padding: 20px !important;
+}
+
+.rf-form-group {
+    margin-bottom: 16px !important;
+}
+
+.rf-form-group label {
+    display: block !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    margin-bottom: 6px !important;
+}
+
+.rf-form-group input,
+.rf-form-group textarea,
+.rf-form-group select {
+    width: 100% !important;
+    padding: 10px 12px !important;
+    border: 1px solid var(--rf-border-color) !important;
+    border-radius: var(--rf-radius-small) !important;
+    font-size: 14px !important;
+    font-family: inherit !important;
+    background: #fff !important;
+    color: var(--rf-text-color) !important;
+    transition: border-color 0.2s ease !important;
+}
+
+.rf-form-group input:focus,
+.rf-form-group textarea:focus,
+.rf-form-group select:focus {
+    outline: none !important;
+    border-color: var(--rf-border-focus) !important;
+}
+
+.rf-form-group textarea {
+    resize: vertical !important;
+    min-height: 150px !important;
+}
+
+.rf-modal-footer {
+    display: flex !important;
+    gap: 12px !important;
+    padding: 16px 20px !important;
+    border-top: 1px solid var(--rf-border-color) !important;
+}
+
+.rf-btn-primary,
+.rf-btn-secondary {
+    flex: 1 !important;
+    padding: 12px 20px !important;
+    border-radius: var(--rf-radius-small) !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.rf-btn-primary {
+    background: var(--rf-primary) !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.rf-btn-primary:hover {
+    background: var(--rf-primary-hover) !important;
+}
+
+.rf-btn-secondary {
+    background: #fff !important;
+    color: var(--rf-text-color) !important;
+    border: 1px solid var(--rf-border-color) !important;
+}
+
+.rf-btn-secondary:hover {
+    background: #f5f5f5 !important;
+}
+
+/* --- 空状态 --- */
+.rf-empty {
+    text-align: center !important;
+    padding: 40px 20px !important;
+    color: var(--rf-text-muted) !important;
+}
+
+/* --- 设置面板样式 --- */
+.rf-settings-panel {
+    background: var(--rf-bg-color) !important;
+    border: 1px solid var(--rf-border-color) !important;
+    border-radius: var(--rf-radius) !important;
+    padding: 20px !important;
+    margin: 10px !important;
+    max-width: 500px !important;
+    font-family: var(--rf-font) !important;
+    color: var(--rf-text-color) !important;
+}
+
+.rf-settings-panel h3 {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    margin: 0 0 20px 0 !important;
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid var(--rf-border-color) !important;
+}
+
+.rf-setting-item {
+    margin-bottom: 20px !important;
+    padding-bottom: 16px !important;
+    border-bottom: 1px solid var(--rf-border-color) !important;
+}
+
+.rf-setting-item:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.rf-setting-item > label {
+    display: block !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    margin-bottom: 8px !important;
+}
+
+.rf-setting-desc {
+    font-size: 12px !important;
+    color: var(--rf-text-muted) !important;
+    margin: 6px 0 0 0 !important;
+}
+
+.rf-setting-info {
+    font-size: 13px !important;
+    color: var(--rf-text-muted) !important;
+    margin: 0 !important;
+}
+
+/* 开关样式 */
+.rf-toggle-label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    cursor: pointer !important;
+}
+
+.rf-toggle-label input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+    accent-color: var(--rf-primary) !important;
+}
+
+.rf-toggle-label span {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+/* 下拉框样式 */
+.rf-setting-item select {
+    width: 100% !important;
+    max-width: 300px !important;
+    padding: 10px 12px !important;
+    border: 1px solid var(--rf-border-color) !important;
+    border-radius: var(--rf-radius-small) !important;
+    font-size: 14px !important;
+    font-family: inherit !important;
+    background: #fff !important;
+    color: var(--rf-text-color) !important;
+    cursor: pointer !important;
+    transition: border-color 0.2s ease !important;
+}
+
+.rf-setting-item select:focus {
+    outline: none !important;
+    border-color: var(--rf-border-focus) !important;
+}
+
+/* 设置按钮组 */
+.rf-setting-actions {
+    display: flex !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+.rf-setting-actions .rf-btn-secondary {
+    flex: 1 !important;
+    min-width: 120px !important;
+    padding: 10px 16px !important;
+    white-space: nowrap !important;
+}
+
+/* 危险区域 */
+.rf-danger-zone {
+    background: #fff5f5 !important;
+    border-radius: var(--rf-radius) !important;
+    padding: 16px !important;
+    border: 1px solid #ffcccc !important;
+}
+
+.rf-danger-zone > label {
+    color: var(--rf-danger) !important;
+}
+
+.rf-danger-zone .rf-setting-desc {
+    color: #cc0000 !important;
+}
+
+/* 设置面板按钮通用样式 */
+.rf-btn-secondary,
+.rf-btn-danger {
+    padding: 10px 16px !important;
+    border-radius: var(--rf-radius-small) !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid var(--rf-border-color) !important;
+    background: #fff !important;
+    color: var(--rf-text-color) !important;
+}
+
+.rf-btn-secondary:hover {
+    background: #f5f5f5 !important;
+    border-color: var(--rf-border-focus) !important;
+}
+
+.rf-btn-danger {
+    background: #fff !important;
+    color: var(--rf-danger) !important;
+    border-color: var(--rf-danger) !important;
+}
+
+.rf-btn-danger:hover {
+    background: var(--rf-danger) !important;
+    color: #fff !important;
+}
