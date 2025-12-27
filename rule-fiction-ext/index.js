@@ -310,19 +310,30 @@ jQuery(async () => {
             </div>
         `;
 
-        // 尝试添加到扩展设置容器
-        const $target = $("#extensions_settings2").length ? $("#extensions_settings2") : $("#extensions_settings");
-        if ($target.length) {
-            $target.append(settingsHtml);
-            console.log(`[${extensionName}] 设置面板已添加到扩展设置页面`);
-        } else {
-            // 降级方案：添加到 body
-            $('body').append(settingsHtml);
-            console.warn(`[${extensionName}] 未找到扩展设置容器，设置面板添加到 body`);
+        // 尝试添加到扩展设置容器（带延迟重试）
+        function appendSettingsPanel() {
+            const $target = $("#extensions_settings2").length ? $("#extensions_settings2") : $("#extensions_settings");
+            if ($target.length) {
+                $target.append(settingsHtml);
+                console.log(`[${extensionName}] 设置面板已添加到扩展设置页面`);
+                bindSettingsPanelEvents();
+                return true;
+            }
+            return false;
         }
 
-        // 绑定设置面板事件
-        bindSettingsPanelEvents();
+        // 立即尝试
+        if (!appendSettingsPanel()) {
+            // 1秒后重试（等待 SillyTavern 加载扩展设置页面）
+            setTimeout(() => {
+                if (!appendSettingsPanel()) {
+                    // 最终降级方案：添加到 body
+                    $('body').append(settingsHtml);
+                    console.warn(`[${extensionName}] 未找到扩展设置容器，设置面板添加到 body`);
+                    bindSettingsPanelEvents();
+                }
+            }, 1000);
+        }
     }
 
     // 绑定设置面板事件
