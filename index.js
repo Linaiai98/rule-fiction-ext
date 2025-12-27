@@ -17,6 +17,7 @@ jQuery(async () => {
     // 存储键
     const STORAGE_KEY_RULES = "rule-fiction-rules";
     const STORAGE_KEY_SIDEBAR_STATE = "rule-fiction-sidebar-open";
+    const STORAGE_KEY_SETTINGS = "rule-fiction-settings";
 
     // DOM IDs
     const SIDEBAR_ID = "rf-sidebar";
@@ -47,6 +48,17 @@ jQuery(async () => {
 
     // 作者信息
     const AUTHOR_NAME = "匿名";
+
+    // 默认设置
+    const DEFAULT_SETTINGS = {
+        enabled: true,
+        defaultColor: 'default',
+        shortcutKey: 'Escape',
+        showCount: true
+    };
+
+    // 当前设置
+    let settings = { ...DEFAULT_SETTINGS };
 
     // -----------------------------------------------------------------
     // 2. 工具函数
@@ -86,6 +98,28 @@ jQuery(async () => {
             renderRules();
         } catch (e) {
             console.warn(`[${extensionName}] 保存规则失败:`, e);
+        }
+    }
+
+    // 加载设置
+    function loadSettings() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY_SETTINGS);
+            if (stored) {
+                settings = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+            }
+        } catch (e) {
+            console.warn(`[${extensionName}] 加载设置失败:`, e);
+            settings = { ...DEFAULT_SETTINGS };
+        }
+    }
+
+    // 保存设置
+    function saveSettings() {
+        try {
+            localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+        } catch (e) {
+            console.warn(`[${extensionName}] 保存设置失败:`, e);
         }
     }
 
@@ -210,6 +244,247 @@ jQuery(async () => {
 
         // 绑定事件
         bindSidebarEvents();
+    }
+
+    // -----------------------------------------------------------------
+    // 3.1 设置面板创建函数
+    // -----------------------------------------------------------------
+
+    function createSettingsPanel() {
+        const SETTINGS_ID = "rf-settings-panel";
+
+        // 如果已存在，先移除
+        $(`#${SETTINGS_ID}`).remove();
+
+        const settingsHtml = `
+            <div id="${SETTINGS_ID}" class="rf-settings-panel">
+                <h3>⚙️ 规则怪谈设置</h3>
+
+                <div class="rf-setting-item">
+                    <label class="rf-toggle-label">
+                        <input type="checkbox" id="rf-enabled-toggle" ${settings.enabled ? 'checked' : ''}>
+                        <span>启用扩展</span>
+                    </label>
+                    <p class="rf-setting-desc">关闭后侧边栏按钮将隐藏</p>
+                </div>
+
+                <div class="rf-setting-item">
+                    <label>默认卡片颜色</label>
+                    <select id="rf-default-color">
+                        <option value="default" ${settings.defaultColor === 'default' ? 'selected' : ''}>默认 (黑白)</option>
+                        <option value="red" ${settings.defaultColor === 'red' ? 'selected' : ''}>警告 (红色)</option>
+                        <option value="blue" ${settings.defaultColor === 'blue' ? 'selected' : ''}>信息 (蓝色)</option>
+                        <option value="yellow" ${settings.defaultColor === 'yellow' ? 'selected' : ''}>注意 (黄色)</option>
+                        <option value="green" ${settings.defaultColor === 'green' ? 'selected' : ''}>安全 (绿色)</option>
+                    </select>
+                </div>
+
+                <div class="rf-setting-item">
+                    <label>关闭侧边栏快捷键</label>
+                    <select id="rf-shortcut-key">
+                        <option value="Escape" ${settings.shortcutKey === 'Escape' ? 'selected' : ''}>Escape (ESC)</option>
+                        <option value="KeyQ" ${settings.shortcutKey === 'KeyQ' ? 'selected' : ''}>Q</option>
+                        <option value="KeyW" ${settings.shortcutKey === 'KeyW' ? 'selected' : ''}>W</option>
+                        <option value="KeyX" ${settings.shortcutKey === 'KeyX' ? 'selected' : ''}>X</option>
+                    </select>
+                </div>
+
+                <div class="rf-setting-item">
+                    <label>规则管理</label>
+                    <div class="rf-setting-actions">
+                        <button id="rf-export-btn" class="rf-btn-secondary">📤 导出规则</button>
+                        <button id="rf-import-btn" class="rf-btn-secondary">📥 导入规则</button>
+                    </div>
+                    <input type="file" id="rf-import-file" accept=".json" style="display: none;">
+                </div>
+
+                <div class="rf-setting-item rf-danger-zone">
+                    <label>危险操作</label>
+                    <p class="rf-setting-desc">此操作无法撤销</p>
+                    <button id="rf-clear-all-btn" class="rf-btn-danger">🗑️ 清除所有规则</button>
+                </div>
+
+                <div class="rf-setting-item">
+                    <p class="rf-setting-info">规则数量: <span id="rf-rule-count">${rules.length}</span></p>
+                </div>
+            </div>
+        `;
+
+        // 尝试添加到扩展设置容器（带延迟重试）
+        function appendSettingsPanel() {
+            const $target = $("#extensions_settings2").length ? $("#extensions_settings2") : $("#extensions_settings");
+            if ($target.length) {
+                $target.append(settingsHtml);
+                console.log(`[${extensionName}] 设置面板已添加到扩展设置页面`);
+                bindSettingsPanelEvents();
+                return true;
+            }
+            return false;
+        }
+
+        // 立即尝试
+        if (!appendSettingsPanel()) {
+            // 1秒后重试（等待 SillyTavern 加载扩展设置页面）
+            setTimeout(() => {
+                if (!appendSettingsPanel()) {
+                    // 最终降级方案：添加到 body
+                    $('body').append(settingsHtml);
+                    console.warn(`[${extensionName}] 未找到扩展设置容器，设置面板添加到 body`);
+                    bindSettingsPanelEvents();
+                }
+            }, 1000);
+        }
+    }
+
+    // 绑定设置面板事件
+    function bindSettingsPanelEvents() {
+        // 启用/禁用开关
+        $("#rf-enabled-toggle").on('change', function() {
+            settings.enabled = $(this).is(':checked');
+            saveSettings();
+            toggleExtensionUI(settings.enabled);
+        });
+
+        // 默认颜色
+        $("#rf-default-color").on('change', function() {
+            settings.defaultColor = $(this).val();
+            saveSettings();
+        });
+
+        // 快捷键
+        $("#rf-shortcut-key").on('change', function() {
+            settings.shortcutKey = $(this).val();
+            saveSettings();
+            updateGlobalShortcuts();
+        });
+
+        // 导出规则
+        $("#rf-export-btn").on('click', function() {
+            exportRules();
+        });
+
+        // 导入按钮
+        $("#rf-import-btn").on('click', function() {
+            $("#rf-import-file").click();
+        });
+
+        // 导入文件选择
+        $("#rf-import-file").on('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                importRules(file);
+            }
+            $(this).val(''); // 清空选择
+        });
+
+        // 清除所有规则
+        $("#rf-clear-all-btn").on('click', function() {
+            if (confirm('确定要清除所有规则吗？此操作无法撤销！')) {
+                if (confirm('再次确认：您确定要删除所有规则吗？')) {
+                    rules = [];
+                    saveRules();
+                    updateRuleCount();
+                    alert('所有规则已清除');
+                }
+            }
+        });
+    }
+
+    // 切换扩展 UI 显示/隐藏
+    function toggleExtensionUI(enabled) {
+        if (enabled) {
+            $(`#${TOGGLE_BTN_ID}`).show();
+            if (isSidebarOpen) {
+                $(`#${SIDEBAR_ID}`).addClass('open');
+            }
+        } else {
+            $(`#${TOGGLE_BTN_ID}`).hide();
+            $(`#${SIDEBAR_ID}`).removeClass('open');
+        }
+    }
+
+    // 更新全局快捷键
+    function updateGlobalShortcuts() {
+        $(document).off('keydown', null, null, 'keydown');
+
+        $(document).on('keydown', function(e) {
+            // ESC 关闭侧边栏（可选）
+            if (e.code === settings.shortcutKey) {
+                if (isSidebarOpen) {
+                    closeSidebar();
+                }
+            }
+        });
+    }
+
+    // 导出规则
+    function exportRules() {
+        const exportData = {
+            version: 1,
+            exportTime: new Date().toISOString(),
+            extension: extensionName,
+            rules: rules
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rule-fiction-rules-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        console.log(`[${extensionName}] 规则已导出，共 ${rules.length} 条`);
+    }
+
+    // 导入规则
+    function importRules(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                // 验证数据格式
+                if (!data.rules || !Array.isArray(data.rules)) {
+                    alert('文件格式无效');
+                    return;
+                }
+
+                const importCount = data.rules.length;
+                const mergeOption = confirm(
+                    `发现 ${importCount} 条规则。\n\n` +
+                    `点击"确定"追加到现有规则（合并）\n` +
+                    `点击"取消"替换现有规则`
+                );
+
+                if (mergeOption) {
+                    // 追加
+                    rules = [...rules, ...data.rules];
+                } else {
+                    // 替换
+                    rules = data.rules;
+                }
+
+                saveRules();
+                updateRuleCount();
+                alert(`成功导入 ${importCount} 条规则`);
+
+            } catch (err) {
+                console.warn(`[${extensionName}] 导入失败:`, err);
+                alert('导入失败，请确保文件格式正确');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // 更新规则数量显示
+    function updateRuleCount() {
+        const $countEl = $("#rf-rule-count");
+        if ($countEl.length) {
+            $countEl.text(rules.length);
+        }
     }
 
     // -----------------------------------------------------------------
@@ -372,7 +647,7 @@ jQuery(async () => {
                 id: generateId(),
                 title,
                 content,
-                color,
+                color: settings.defaultColor,
                 createdAt: Date.now()
             });
         }
@@ -430,6 +705,7 @@ jQuery(async () => {
         console.log(`[${extensionName}] 清理中...`);
         $(`#${TOGGLE_BTN_ID}`).remove();
         $(`#${SIDEBAR_ID}`).remove();
+        $(`#rf-settings-panel`).remove();
         $(document).off('keydown', null, null, 'keydown');
     }
 
@@ -440,24 +716,34 @@ jQuery(async () => {
     function init() {
         console.log(`[${extensionName}] 开始初始化...`);
 
-        // 加载数据
+        // 加载数据和设置
         loadRules();
+        loadSettings();
 
         // 创建 UI
         createToggleButton();
         createSidebar();
         renderRules();
 
+        // 创建设置面板
+        createSettingsPanel();
+
+        // 应用设置 - 控制 UI 显示
+        toggleExtensionUI(settings.enabled);
+
         // 恢复侧边栏状态
         try {
             const savedState = localStorage.getItem(STORAGE_KEY_SIDEBAR_STATE);
-            if (savedState === 'true') {
+            if (savedState === 'true' && settings.enabled) {
                 isSidebarOpen = true;
                 $(`#${SIDEBAR_ID}`).addClass('open');
             }
         } catch (e) {
             console.warn(`[${extensionName}] 恢复状态失败:`, e);
         }
+
+        // 设置全局快捷键
+        updateGlobalShortcuts();
 
         console.log(`[${extensionName}] 初始化完成！`);
     }

@@ -5,6 +5,7 @@
 # OS 文件
 .DS_Store
 Thumbs.db
+nul
 
 # 编辑器
 .vscode/
