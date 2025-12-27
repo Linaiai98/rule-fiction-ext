@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>规则怪谈</title>
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <div id="rule-fiction-sidebar" class="sidebar">
+    <!-- 头部 -->
+    <div class="sidebar-header">
+      <h2>规则怪谈</h2>
+      <button id="sidebar-close" class="btn-close">&times;</button>
+    </div>
+
+    <!-- 规则列表 -->
+    <div id="rule-list" class="rule-list">
+      <!-- 规则卡片将动态插入这里 -->
+    </div>
+
+    <!-- 添加规则按钮 -->
+    <button id="add-rule-btn" class="btn-add">+ 添加规则</button>
+
+    <!-- 编辑弹窗 -->
+    <div id="edit-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modal-title">添加规则</h3>
+          <button id="modal-close" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="rule-title">规则标题</label>
+            <input type="text" id="rule-title" placeholder="输入规则标题...">
+          </div>
+          <div class="form-group">
+            <label for="rule-content">规则内容</label>
+            <textarea id="rule-content" rows="8" placeholder="输入规则内容...&#10;&#10;支持多行文本"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="rule-color">卡片颜色</label>
+            <select id="rule-color">
+              <option value="default">默认 (黑白)</option>
+              <option value="red">警告 (红色)</option>
+              <option value="blue">信息 (蓝色)</option>
+              <option value="yellow">注意 (黄色)</option>
+              <option value="green">安全 (绿色)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="cancel-btn" class="btn-secondary">取消</button>
+          <button id="save-btn" class="btn-primary">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidebar.js"></script>
+</body>
+</html>
